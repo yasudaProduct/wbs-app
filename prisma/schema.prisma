@@ -17,6 +17,8 @@ model User {
   id              Int               @id
   name            String
   email           String            @unique
+  tasks           WbsTask[]         @relation("TaskAssignee")
+  statusLogs      TaskStatusLog[]   @relation("StatusChanger")
 
   @@map("users")
 }
@@ -37,7 +39,74 @@ model Project {
   startDate    DateTime @map(name: "start_date")
   endDate      DateTime @map(name: "end_date")
   company      Company  @relation(fields: [companyId], references: [id])
-  // wbs       Wbs[]
+  wbs          Wbs[]
 
   @@map("projects")
+}
+
+model Wbs {
+  id        Int         @id @default(autoincrement())
+  projectId Int         @map(name: "project_id")
+  project   Project     @relation(fields: [projectId], references: [id])
+  phases    WbsPhase[]
+  tasks     WbsTask[]
+
+  @@map("wbs")
+}
+
+model WbsPhase {
+  id                Int            @id @default(autoincrement())
+  wbsId             Int            @map(name: "wbs_id")
+  phaseTemplateId   Int?           @map(name: "phase_template_id")
+  seq               Int
+  name              String
+  isTemplateBased   Boolean        @map(name: "is_template_based")
+  wbs               Wbs            @relation(fields: [wbsId], references: [id])
+  phaseTemplate     PhaseTemplate? @relation(fields: [phaseTemplateId], references: [id])
+  tasks             WbsTask[]
+
+  @@map("wbs_phase")
+}
+
+model PhaseTemplate {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  order     Int
+  wbsPhases WbsPhase[]
+
+  @@map("phase_template")
+}
+
+model WbsTask {
+  id             String           @id @default(uuid())
+  wbsId          Int              @map (name: "wbs_id")
+  phaseId        Int              @map (name: "phase_id")
+  name           String
+  tantoId        Int?             @map (name: "tanto_id")
+  kijunStartDate DateTime         @map (name: "kijun_start_date")
+  kijunEndDate   DateTime         @map (name: "kijun_end_date")
+  kijunKosu      Int              @map (name: "kijun_kosu")
+  status         TaskStatus       @default(NOT_STARTED)
+  wbs            Wbs              @relation(fields: [wbsId], references: [id])
+  phase          WbsPhase         @relation(fields: [phaseId], references: [id])
+  assignee       User?            @relation("TaskAssignee", fields: [tantoId], references: [id])
+  statusLogs     TaskStatusLog[]
+
+  @@map("wbs_task")
+}
+
+model TaskStatusLog {
+  id        Int        @id @default(autoincrement())
+  taskId    String
+  status    TaskStatus
+  changedAt DateTime
+  changedBy Int?
+  task      WbsTask    @relation(fields: [taskId], references: [id])
+  changer   User?      @relation("StatusChanger", fields: [changedBy], references: [id])
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
 }
