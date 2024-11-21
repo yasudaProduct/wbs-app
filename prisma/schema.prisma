@@ -30,13 +30,14 @@ model Company {
 }
 
 model Project {
-  id         String   @id
-  companyId  Int      @map(name: "company_id")
-  name       String
-  startDate  DateTime @map(name: "start_date")
-  endDate    DateTime @map(name: "end_date")
-  company    Company  @relation(fields: [companyId], references: [id])
-  // wbs        Wbs[]
+  id           Int   @id @default(autoincrement())
+  companyId    Int      @map(name: "company_id")
+  projectCode  String   @map(name: "project_code")
+  name         String
+  startDate    DateTime @map(name: "start_date")
+  endDate      DateTime @map(name: "end_date")
+  company      Company  @relation(fields: [companyId], references: [id])
+  // wbs       Wbs[]
 
   @@map("projects")
 }
