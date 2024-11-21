@@ -2,9 +2,12 @@ services:
   app:
     build:
       context: .
+    ports:
+      - "3000:3000"
     volumes:
       - .:/app
     tty: true
+    command: npm run dev
   db:
     image: postgres:12-alpine
     container_name: wbs-postgres
