@@ -1,22 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { CreateProjectInput, Company } from '@/types/project'
+import { toast } from '@/hooks/use-toast'
 
 export default function NewProjectPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateProjectInput>({
     name: '',
     projectCode: '',
-    companyId: '',
+    companyId: 0,
     startDate: '',
     endDate: '',
   })
+  const [companies, setCompanies] = useState<Company[]>([])
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      const response = await fetch('/api/companies')
+      if (response.ok) {
+        const data = await response.json()
+        setCompanies(data)
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch companies",
+          variant: "destructive",
+        })
+      }
+    }
+
+    fetchCompanies()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,9 +51,17 @@ export default function NewProjectPage() {
 
     if (response.ok) {
       router.push('/projects')
+      toast({
+        title: "Success",
+        description: "Project created successfully",
+      })
     } else {
-      // Handle error
-      console.error('Failed to create project')
+      const errorData = await response.json()
+      toast({
+        title: "Error",
+        description: errorData.error || "Failed to create project",
+        variant: "destructive",
+      })
     }
   }
 
@@ -41,19 +70,19 @@ export default function NewProjectPage() {
   }
 
   const handleSelectChange = (value: string) => {
-    setFormData({ ...formData, companyId: value })
+    setFormData({ ...formData, companyId: parseInt(value) })
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle>プロジェクト作成</CardTitle>
+          <CardTitle>Create New Project</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">プロジェクト名</Label>
+              <Label htmlFor="name">Project Name</Label>
               <Input
                 id="name"
                 name="name"
@@ -63,7 +92,7 @@ export default function NewProjectPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="projectCode">プロジェクトコード</Label>
+              <Label htmlFor="projectCode">Project Code</Label>
               <Input
                 id="projectCode"
                 name="projectCode"
@@ -73,19 +102,22 @@ export default function NewProjectPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="companyId">顧客</Label>
+              <Label htmlFor="companyId">Company</Label>
               <Select name="companyId" onValueChange={handleSelectChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="選択" />
+                  <SelectValue placeholder="Select a company" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Company 1</SelectItem>
-                  <SelectItem value="2">Company 2</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id.toString()}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startDate">案件開始日</Label>
+              <Label htmlFor="startDate">Start Date</Label>
               <Input
                 type="date"
                 id="startDate"
@@ -96,7 +128,7 @@ export default function NewProjectPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate">案件終了日</Label>
+              <Label htmlFor="endDate">End Date</Label>
               <Input
                 type="date"
                 id="endDate"
@@ -106,7 +138,7 @@ export default function NewProjectPage() {
                 required
               />
             </div>
-            <Button type="submit">作成</Button>
+            <Button type="submit">Create Project</Button>
           </form>
         </CardContent>
       </Card>
