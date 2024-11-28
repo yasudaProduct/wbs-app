@@ -11,3 +11,20 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 })
   }
 }
+
+export async function POST(request: Request) {
+    const body = await request.json()
+    const { name } = body
+  
+    try {
+      const company = await prisma.company.create({
+        data: { name },
+      })
+  
+      return NextResponse.json(company, { status: 201 })
+    } catch (error) {
+      console.error('Failed to create company:', error)
+      return NextResponse.json({ error: '企業の作成に失敗しました' }, { status: 500 })
+    }
+  }
+  
