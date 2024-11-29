@@ -18,6 +18,7 @@ export default function PhaseTemplatesPage() {
   const [templates, setTemplates] = useState<PhaseTemplate[]>([])
   const [newTemplateName, setNewTemplateName] = useState('')
   const [newTemplateOrder, setNewTemplateOrder] = useState('')
+  const [editingTemplate, setEditingTemplate] = useState<PhaseTemplate | null>(null)
 
   useEffect(() => {
     fetchTemplates()
@@ -65,21 +66,34 @@ export default function PhaseTemplatesPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    const response = await fetch(`/api/phase-templates/${id}`, {
-      method: 'DELETE',
+  const handleEdit = (template: PhaseTemplate) => {
+    setEditingTemplate(template)
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingTemplate) return
+
+    const response = await fetch(`/api/phase-templates/${editingTemplate.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(editingTemplate),
     })
 
     if (response.ok) {
       toast({
         title: "成功",
-        description: "テンプレートが正常に削除されました",
+        description: "テンプレートが正常に更新されました",
       })
+      setEditingTemplate(null)
       fetchTemplates()
     } else {
+      const errorData = await response.json()
       toast({
         title: "エラー",
-        description: "テンプレートの削除に失敗しました",
+        description: errorData.error || "テンプレートの更新に失敗しました",
         variant: "destructive",
       })
     }
@@ -125,12 +139,42 @@ export default function PhaseTemplatesPage() {
           {templates.map((template) => (
             <TableRow key={template.id}>
               <TableCell>{template.id}</TableCell>
-              <TableCell>{template.name}</TableCell>
-              <TableCell>{template.order}</TableCell>
               <TableCell>
-                <Button variant="outline" size="sm" className="mr-2" onClick={() => handleDelete(template.id)}>
-                  削除
-                </Button>
+                {editingTemplate?.id === template.id ? (
+                  <Input
+                    value={editingTemplate.name}
+                    onChange={(e) => setEditingTemplate({...editingTemplate, name: e.target.value})}
+                  />
+                ) : (
+                  template.name
+                )}
+              </TableCell>
+              <TableCell>
+                {editingTemplate?.id === template.id ? (
+                  <Input
+                    type="number"
+                    value={editingTemplate.order}
+                    onChange={(e) => setEditingTemplate({...editingTemplate, order: parseInt(e.target.value)})}
+                  />
+                ) : (
+                  template.order
+                )}
+              </TableCell>
+              <TableCell>
+                {editingTemplate?.id === template.id ? (
+                  <>
+                    <Button variant="outline" size="sm" className="mr-2" onClick={handleUpdate}>
+                      保存
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setEditingTemplate(null)}>
+                      キャンセル
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(template)}>
+                    編集
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
