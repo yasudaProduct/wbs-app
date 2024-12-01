@@ -1,23 +1,38 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const body = await request.json()
-  const { name } = body
-
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string; phaseId: string } }
+) {
   try {
-    const phase = await prisma.wbsPhase.create({
-      data: {
-        name,
-        wbsId: parseInt(params.id),
-        seq: 0,
-        isTemplateBased: true,
-      },
+    const body = await request.json()
+    const { name } = body
+
+    const updatedPhase = await prisma.wbsPhase.update({
+      where: { id: parseInt(params.phaseId) },
+      data: { name },
     })
 
-    return NextResponse.json(phase, { status: 201 })
+    return NextResponse.json(updatedPhase)
   } catch (error) {
-    console.error('Failed to create phase:', error)
-    return NextResponse.json({ error: 'Failed to create phase' }, { status: 500 })
+    console.error('Failed to update phase:', error)
+    return NextResponse.json({ error: 'Failed to update phase' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string; phaseId: string } }
+) {
+  try {
+    await prisma.wbsPhase.delete({
+      where: { id: parseInt(params.phaseId) },
+    })
+
+    return NextResponse.json({ message: 'Phase deleted successfully' })
+  } catch (error) {
+    console.error('Failed to delete phase:', error)
+    return NextResponse.json({ error: 'Failed to delete phase' }, { status: 500 })
   }
 }
