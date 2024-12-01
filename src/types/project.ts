@@ -51,8 +51,8 @@ export type User = {
     phaseTemplateId: number | null;
     seq: number;
     name: string;
-    isCustom: boolean;
-    wbs: WBS;
+    isTemplateBased: boolean;
+    wbs: WBS | null;
     phaseTemplate?: PhaseTemplate;
     tasks: WBSTask[];
   };

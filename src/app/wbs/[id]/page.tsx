@@ -6,26 +6,44 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from '@/hooks/use-toast'
-import { WBS, WBSTask, PhaseTemplate } from '@/types/project'
+import { WBS, WBSPhase, WBSTask, PhaseTemplate, User } from '@/types/project'
 
-export default function WBSPage({ params }: { params: { id: string } }) {
+// ユーティリティ関数
+const formatDate = (date: Date | string) => {
+  if (date instanceof Date) {
+    return date.toISOString().split('T')[0];
+  }
+  return new Date(date).toISOString().split('T')[0];
+}
+
+const parseDate = (dateString: string) => new Date(dateString);
+
+export default function WBSPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params)
   const router = useRouter()
   const [wbs, setWbs] = useState<WBS | null>(null)
   const [phaseTemplates, setPhaseTemplates] = useState<PhaseTemplate[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [newTaskName, setNewTaskName] = useState('')
   const [newTaskPhaseId, setNewTaskPhaseId] = useState<number | null>(null)
+  const [newTaskStartDate, setNewTaskStartDate] = useState('')
+  const [newTaskEndDate, setNewTaskEndDate] = useState('')
+  const [newTaskKosu, setNewTaskKosu] = useState('')
+  const [newTaskTantoId, setNewTaskTantoId] = useState('')
   const [editingTask, setEditingTask] = useState<WBSTask | null>(null)
 
   useEffect(() => {
     fetchWBS()
     fetchPhaseTemplates()
-  }, [params.id])
+    fetchUsers()
+  }, [id])
 
   const fetchWBS = async () => {
-    const response = await fetch(`/api/wbs/${params.id}`)
+    const response = await fetch(`/api/wbs/${id}`)
     if (response.ok) {
       const data = await response.json()
       setWbs(data)
@@ -52,6 +70,20 @@ export default function WBSPage({ params }: { params: { id: string } }) {
     }
   }
 
+  const fetchUsers = async () => {
+    const response = await fetch('/api/users')
+    if (response.ok) {
+      const data = await response.json()
+      setUsers(data)
+    } else {
+      toast({
+        title: "エラー",
+        description: "ユーザー情報の取得に失敗しました",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleAddTask = async () => {
     if (!wbs || !newTaskName || !newTaskPhaseId) return
 
@@ -60,7 +92,13 @@ export default function WBSPage({ params }: { params: { id: string } }) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name: newTaskName }),
+      body: JSON.stringify({
+        name: newTaskName,
+        kijunStartDate: newTaskStartDate,
+        kijunEndDate: newTaskEndDate,
+        kijunKosu: parseInt(newTaskKosu),
+        tantoId: parseInt(newTaskTantoId),
+      }),
     })
 
     if (response.ok) {
@@ -78,6 +116,10 @@ export default function WBSPage({ params }: { params: { id: string } }) {
       })
       setNewTaskName('')
       setNewTaskPhaseId(null)
+      setNewTaskStartDate('')
+      setNewTaskEndDate('')
+      setNewTaskKosu('')
+      setNewTaskTantoId('')
       toast({
         title: "成功",
         description: "タスクが正常に追加されました",
@@ -194,14 +236,18 @@ export default function WBSPage({ params }: { params: { id: string } }) {
                 <TableHead>フェーズ</TableHead>
                 <TableHead>タスク名</TableHead>
                 <TableHead>ステータス</TableHead>
-                <TableHead></TableHead>
+                <TableHead>基準開始日</TableHead>
+                <TableHead>基準終了日</TableHead>
+                <TableHead>基準工数</TableHead>
+                <TableHead>担当者</TableHead>
+                <TableHead>アクション</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {wbs.phases.map((phase) => (
                 <React.Fragment key={phase.id}>
                   <TableRow>
-                    <TableCell colSpan={4} className="bg-muted">
+                    <TableCell colSpan={8} className="bg-muted">
                       <span className="font-bold">{phase.name}</span>
                     </TableCell>
                   </TableRow>
@@ -235,6 +281,60 @@ export default function WBSPage({ params }: { params: { id: string } }) {
                           </Select>
                         ) : (
                           task.status
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingTask?.id === task.id ? (
+                          <Input
+                            type="date"
+                            value={formatDate(editingTask.kijunStartDate)}
+                            onChange={(e) => setEditingTask({...editingTask, kijunStartDate: e.target.value})}
+                          />
+                        ) : (
+                          formatDate(task.kijunStartDate)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingTask?.id === task.id ? (
+                          <Input
+                            type="date"
+                            value={formatDate(editingTask.kijunEndDate)}
+                            onChange={(e) => setEditingTask({...editingTask, kijunEndDate: e.target.value})}
+                          />
+                        ) : (
+                          formatDate(task.kijunEndDate)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingTask?.id === task.id ? (
+                          <Input
+                            type="number"
+                            value={editingTask.kijunKosu}
+                            onChange={(e) => setEditingTask({...editingTask, kijunKosu: parseInt(e.target.value)})}
+                          />
+                        ) : (
+                          task.kijunKosu
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingTask?.id === task.id ? (
+                          <Select
+                            value={editingTask.tantoId?.toString()}
+                            onValueChange={(value) => setEditingTask({...editingTask, tantoId: parseInt(value)})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {users.map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          users.find(user => user.id === task.tantoId)?.name || '未割当'
                         )}
                       </TableCell>
                       <TableCell>
@@ -285,6 +385,41 @@ export default function WBSPage({ params }: { params: { id: string } }) {
                   />
                 </TableCell>
                 <TableCell></TableCell>
+                <TableCell>
+                  <Input
+                    type="date"
+                    value={newTaskStartDate}
+                    onChange={(e) => setNewTaskStartDate(e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="date"
+                    value={newTaskEndDate}
+                    onChange={(e) => setNewTaskEndDate(e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={newTaskKosu}
+                    onChange={(e) => setNewTaskKosu(e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Select value={newTaskTantoId} onValueChange={setNewTaskTantoId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="担当者を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
                 <TableCell>
                   <Button onClick={handleAddTask}>追加</Button>
                 </TableCell>
