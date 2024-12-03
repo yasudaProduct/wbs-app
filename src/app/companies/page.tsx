@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import prisma from '@/lib/prisma'
-import { Company } from '@/types/project'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Company } from '@prisma/client'
 
 export default async function CompaniesPage() {
   const companies: Company[] = await prisma.company.findMany()
@@ -15,19 +15,30 @@ export default async function CompaniesPage() {
           <Link href="/companies/new">新規企業登録</Link>
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {companies.map((company) => (
-          <Card key={company.id}>
-            <CardHeader>
-              <CardTitle>{company.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href={`/companies/${company.id}`}>詳細を見る</Link>
+      <div className="rounded-md border">
+      <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>名前</TableHead>
+              <TableHead className="text-right"></TableHead>
+              </TableRow>
+          </TableHeader>
+          <TableBody>
+          {companies.map((company) => (
+            <TableRow key={company.id}>
+            <TableCell className="font-medium">{company.name}</TableCell>
+            <TableCell className="text-right">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/companies/${company.id}/edit`}>編集</Link>
               </Button>
-            </CardContent>
-          </Card>
-        ))}
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/companies/${company.id}`}>詳細</Link>
+              </Button>
+            </TableCell>
+          </TableRow>
+          ))}
+          </TableBody>
+          </Table>
       </div>
     </div>
   )

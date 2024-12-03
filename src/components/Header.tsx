@@ -6,7 +6,7 @@ export function Header() {
     <header className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-4">
         <nav className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold">WBS Tool</Link>
+          <Link href="/" className="text-2xl font-bold"></Link>
           <ul className="flex space-x-4">
             <li>
               <Button variant="ghost" asChild>
@@ -21,11 +21,6 @@ export function Header() {
             <li>
               <Button variant="ghost" asChild>
                 <Link href="/wbs">WBS</Link>
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" asChild>
-                <Link href="/phase-templates">フェーズテンプレート</Link>
               </Button>
             </li>
           </ul>
