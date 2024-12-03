@@ -20,7 +20,7 @@ export type User = {
     name: string;
     startDate: Date;
     endDate: Date;
-    company: Company;
+    company?: Company;
     wbs?: WBS[];
   };
   
@@ -36,7 +36,7 @@ export type User = {
   // WBS related types
   export type WBS = {
     id: number;
-    projectId: string;
+    projectId: number;
     project: Project;
     phases: WBSPhase[];
     tasks: WBSTask[];
@@ -76,16 +76,17 @@ export type User = {
     id: string;
     wbsId: number;
     phaseId: number;
+    phaseName: string;
     name: string;
     tantoId: number | null;
     kijunStartDate: Date;
     kijunEndDate: Date;
     kijunKosu: number;
     status: TaskStatus;
-    wbs: WBS;
-    phase: WBSPhase;
-    assignee?: User;
-    statusLogs: TaskStatusLog[];
+    // wbs?: WBS;
+    // phase: WBSPhase;
+    assignee: User | null;
+    statusLogs?: TaskStatusLog[];
   };
   
   export type CreateWBSTaskInput = Omit<WBSTask, 'id' | 'wbs' | 'phase' | 'assignee' | 'statusLogs' | 'kijunStartDate' | 'kijunEndDate'> & {
