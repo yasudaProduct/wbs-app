@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     const wbs = await prisma.wbs.create({
       data: {
-        // name: name,
+        name: name,
         projectId: numericProjectId,
       },
       include: {
