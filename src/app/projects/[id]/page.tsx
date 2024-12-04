@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
-import { Project } from "@/types/project";
 
 export default async function ProjectPage({
   params,
@@ -11,7 +10,7 @@ export default async function ProjectPage({
 }) {
   const { id } = await params;
 
-  const project: Project = await prisma.project.findUnique({
+  const project = await prisma.project.findUnique({
     where: { id: parseInt(id, 10) },
     include: {
       company: true,
@@ -45,10 +44,11 @@ export default async function ProjectPage({
       </Card>
 
       <h2 className="text-2xl font-bold mt-8 mb-4">WBS</h2>
-      {project.wbs === undefined ? (
-        <Button asChild>
-          <Link href={`/projects/${project.id}/wbs/new`}>Create WBS</Link>
-        </Button>
+      <Button asChild>
+        <Link href={`/projects/create-wbs/${id}`}>WBSを作成する</Link>
+      </Button>
+      {project.wbs.length === 0 ? (
+        <p className="my-3">WBSがありません</p>
       ) : (
         project.wbs.map((wbs) => (
           <Card key={wbs.id} className="mt-4">

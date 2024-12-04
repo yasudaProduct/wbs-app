@@ -9,10 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import prisma from '@/lib/prisma'
-import { Project } from '@/types/project'
 
 export default async function ProjectsPage() {
-  const projects: Project[] = await prisma.project.findMany({
+  const projects = await prisma.project.findMany({
     include: { company: true },
   })
 

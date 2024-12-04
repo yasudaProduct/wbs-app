@@ -4,9 +4,11 @@ import prisma from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { projectId } = body
+    console.log('body:', body);
+    const { projectId, name } = body
 
-    console.log('Received projectId:', projectId);
+    console.log('projectId:', projectId);
+    console.log('projectId:', name);
 
     if (!projectId) {
       return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
@@ -20,6 +22,7 @@ export async function POST(request: Request) {
 
     const wbs = await prisma.wbs.create({
       data: {
+        // name: name,
         projectId: numericProjectId,
       },
       include: {
