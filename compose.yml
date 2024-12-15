@@ -10,7 +10,7 @@ services:
     tty: true
     environment:
       - WATCHPACK_POLLING=true
-    command: npm run dev
+    # command: npm run dev
   db:
     image: postgres:12-alpine
     container_name: wbs-app-postgres
